@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { GradeLevel, Subject } from './types';
 import { SubjectGrid } from './components/SubjectGrid';
 import { ChatInterface } from './components/ChatInterface';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { AdminGenerator } from './components/AdminGenerator';
-import { GraduationCap, Sparkles, ArrowRight, Printer, LockKeyhole, Lock } from 'lucide-react';
+import { GraduationCap, Sparkles, ArrowRight, Printer, LockKeyhole } from 'lucide-react';
 import { FloatingTools } from './components/FloatingTools';
 import { TrialCountdown } from './components/TrialCountdown';
 
@@ -13,61 +12,16 @@ const App: React.FC = () => {
   const [grade, setGrade] = useState<GradeLevel | null>(null);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [lockedGrade, setLockedGrade] = useState<GradeLevel | null>(null);
 
   useEffect(() => {
     // Check for admin route on load and hash change
     const checkAdmin = () => setIsAdmin(window.location.hash === '#admin');
     checkAdmin();
     window.addEventListener('hashchange', checkAdmin);
-    
-// 🔥 Check for Grade Lock (Activated Bundle)
-const checkGradeLock = () => {
-    const isActivated = localStorage.getItem('app_activated') === 'true';
-    const bundleType = localStorage.getItem('activated_bundle');
-    const gradeKey = localStorage.getItem('activated_grade');
-
-    if (isActivated && bundleType === 'full' && gradeKey) {
-        let mappedGrade: GradeLevel | null = null;
-
-        // دعم كل الاحتمالات (بالشرطة أو بدونها)
-        if (gradeKey === 'grade1' || gradeKey === 'grade-1') mappedGrade = GradeLevel.GRADE_10;
-        if (gradeKey === 'grade2' || gradeKey === 'grade-2') mappedGrade = GradeLevel.GRADE_11;
-        if (gradeKey === 'grade3' || gradeKey === 'grade-3') mappedGrade = GradeLevel.GRADE_12;
-
-        if (mappedGrade) {
-            setLockedGrade(mappedGrade);
-            setGrade(mappedGrade); // Force navigation to grade
-        }
-    }
-};
-
-
-    checkGradeLock();
-    // Listen for activation updates to apply lock immediately
-    window.addEventListener('subscription-updated', checkGradeLock);
-
-    return () => {
-        window.removeEventListener('hashchange', checkAdmin);
-        window.removeEventListener('subscription-updated', checkGradeLock);
-    };
+    return () => window.removeEventListener('hashchange', checkAdmin);
   }, []);
 
   const handlePrint = () => window.print();
-
-  const handleGradeSelect = (selected: GradeLevel) => {
-      if (lockedGrade && lockedGrade !== selected) {
-          alert(`⛔ عذراً، اشتراكك مفعل فقط لـ ${lockedGrade}`);
-          return;
-      }
-      setGrade(selected);
-  };
-
-  const handleBackToHome = () => {
-      // If locked, prevent going back to null (Home), stick to Grade view
-      if (lockedGrade) return; 
-      setGrade(null);
-  };
 
   // 1. Route to Admin Panel if hash matches
   if (isAdmin) return <AdminGenerator />;
@@ -90,7 +44,7 @@ const checkGradeLock = () => {
         /* --- Subject Selection Screen --- */
         <div className="min-h-screen flex flex-col bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
           <header className="glass px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
-             <div className="flex items-center gap-3 cursor-pointer" onClick={handleBackToHome}>
+             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setGrade(null)}>
                 <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
                    <GraduationCap size={24} />
                 </div>
@@ -159,39 +113,24 @@ const checkGradeLock = () => {
                   { id: GradeLevel.GRADE_10, title: 'الصف الأول الثانوي', desc: 'نظام 2026 الجديد', color: 'from-blue-500 to-cyan-400', num: '1' },
                   { id: GradeLevel.GRADE_11, title: 'الصف الثاني الثانوي', desc: 'علمي وأدبي', color: 'from-indigo-500 to-purple-500', num: '2' },
                   { id: GradeLevel.GRADE_12, title: 'الصف الثالث الثانوي', desc: 'عام التحديد والتفوق', color: 'from-rose-500 to-orange-400', num: '3' },
-                ].map((item) => {
-                   const isLockedOut = lockedGrade && lockedGrade !== item.id;
-                   
-                   return (
-                       <button
-                         key={item.id}
-                         onClick={() => handleGradeSelect(item.id)}
-                         disabled={!!isLockedOut}
-                         className={`glass-card w-full p-4 rounded-2xl flex items-center gap-6 group text-right relative overflow-hidden transition-all duration-300
-                            ${isLockedOut ? 'opacity-60 grayscale cursor-not-allowed bg-slate-100' : 'hover:border-indigo-300 hover:scale-[1.02]'}
-                         `}
-                       >
-                          {isLockedOut && (
-                              <div className="absolute inset-0 bg-slate-200/50 z-20 flex items-center justify-center">
-                                  <Lock className="text-slate-500 w-8 h-8 opacity-80" />
-                              </div>
-                          )}
-                          
-                          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white font-black text-2xl shadow-lg transform group-hover:scale-110 transition-transform duration-300`}>
-                             {item.num}
-                          </div>
-                          <div>
-                             <h3 className="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{item.title}</h3>
-                             <p className="text-slate-500 font-medium">{item.desc}</p>
-                          </div>
-                          {!isLockedOut && (
-                              <div className="mr-auto opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300 text-indigo-400">
-                                 <ArrowRight size={24} />
-                              </div>
-                          )}
-                       </button>
-                   );
-                })}
+                ].map((item) => (
+                   <button
+                     key={item.id}
+                     onClick={() => setGrade(item.id)}
+                     className="glass-card w-full p-4 rounded-2xl flex items-center gap-6 group hover:border-indigo-300 text-right"
+                   >
+                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white font-black text-2xl shadow-lg transform group-hover:scale-110 transition-transform duration-300`}>
+                         {item.num}
+                      </div>
+                      <div>
+                         <h3 className="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{item.title}</h3>
+                         <p className="text-slate-500 font-medium">{item.desc}</p>
+                      </div>
+                      <div className="mr-auto opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300 text-indigo-400">
+                         <ArrowRight size={24} />
+                      </div>
+                   </button>
+                ))}
              </div>
           </div>
           
