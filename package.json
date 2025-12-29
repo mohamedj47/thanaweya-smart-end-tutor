@@ -1,3 +1,4 @@
+
 {
   "name": "thanaweya-smart-tutor",
   "private": true,
@@ -11,7 +12,7 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@google/genai": "^0.22.0",
+    "@google/genai": "^0.2.1",
     "lucide-react": "^0.474.0",
     "react-markdown": "^9.0.3",
     "remark-gfm": "^4.0.1",
