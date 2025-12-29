@@ -1,16 +1,23 @@
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'recharts', 'lucide-react']
+        }
+      }
+    }
+  },
+  server: {
+    host: true,
+    port: 3000
+  }
+});
