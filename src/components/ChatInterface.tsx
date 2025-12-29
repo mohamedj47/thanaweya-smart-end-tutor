@@ -83,7 +83,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ grade, subject, on
 
   const handleVideoGenerate = async () => {
     if (!inputValue.trim()) {
-        alert("اكتب وصفاً للفيديو أولاً في مربع الكتابة (مثلاً: فيديو يشرح التفاعل الكيميائي) ثم اضغط على زر الفيديو.");
+        alert("اكتب وصفاً للفيديو أولاً في مربع الكتابة ثم اضغط على زر الفيديو.");
         return;
     }
 
@@ -116,7 +116,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ grade, subject, on
         console.error(error);
         setMessages(p => [...p, {
             id: Date.now().toString(),
-            text: "عذراً، حدث خطأ أثناء إعداد الفيديو. حاول مرة أخرى بموضوع أبسط.",
+            text: "عذراً، حدث خطأ أثناء إعداد الفيديو.",
             sender: Sender.BOT,
             timestamp: new Date()
         }]);
@@ -184,26 +184,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ grade, subject, on
             <div className="flex gap-3 items-center bg-amber-50 border border-amber-200 p-4 rounded-xl mx-4 animate-pulse">
                 <Loader2 size={24} className="text-amber-600 animate-spin" />
                 <div>
-                   <span className="block text-sm font-bold text-amber-800">جاري إعداد الفيديو التعليمي (مجاني)...</span>
-                   <span className="text-xs text-amber-600">يتم تأليف السيناريو والمشاهد الآن.</span>
+                   <span className="block text-sm font-bold text-amber-800">جاري إعداد الفيديو التعليمي...</span>
+                   <span className="text-xs text-amber-600">يتم تأليف المشاهد الآن.</span>
                 </div>
             </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggestions */}
-      {!isLoading && !isVideoGenerating && messages.length < 3 && (
-        <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide no-print">
-          {SUGGESTIONS.map((s, i) => (
-            <button key={i} onClick={() => handleSend(s.prompt)} className="flex items-center gap-2 bg-white border border-slate-200 hover:border-indigo-400 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 transition-all shadow-sm whitespace-nowrap">
-              <span className="text-indigo-500">{s.icon}</span> {s.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Input Area */}
       <div className="p-4 bg-white border-t border-slate-100 input-area">
         {attachment && (
             <div className="flex justify-between bg-slate-50 p-2 rounded-lg mb-2 border border-slate-200">
@@ -213,13 +201,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ grade, subject, on
         )}
         <div className="bg-slate-50 border border-slate-200 rounded-3xl p-2 flex items-end shadow-inner focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
           <div className="flex gap-1 pb-1 px-1">
-             <button onClick={() => setIsLiveMode(true)} className="p-2 rounded-full bg-indigo-100 text-indigo-600" title="محادثة صوتية حية"><AudioLines size={18} /></button>
+             <button onClick={() => setIsLiveMode(true)} className="p-2 rounded-full bg-indigo-100 text-indigo-600" title="محادثة صوتية"><AudioLines size={18} /></button>
              <button onClick={() => cameraInputRef.current?.click()} className="p-2 rounded-full hover:bg-slate-200 text-slate-500"><Camera size={18} /></button>
              <button onClick={() => fileInputRef.current?.click()} className="p-2 rounded-full hover:bg-slate-200 text-slate-500"><Paperclip size={18} /></button>
              <button 
                 onClick={handleVideoGenerate} 
                 className="p-2 rounded-full bg-amber-500 text-white hover:bg-amber-600 shadow-md transition-all hover:scale-105" 
-                title="فيديو تعليمي (مجاني)"
+                title="فيديو تعليمي"
              >
                 <Video size={18} />
              </button>
@@ -229,7 +217,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ grade, subject, on
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-            placeholder={isRecording ? "جاري التسجيل..." : "اكتب سؤالك أو صف الفيديو الذي تريده..."}
+            placeholder={isRecording ? "جاري التسجيل..." : "اكتب سؤالك أو صف الفيديو..."}
             className="flex-1 bg-transparent border-none focus:ring-0 resize-none h-[44px] py-2.5 px-2 text-sm max-h-32"
           />
           <div className="flex gap-1 pb-1">
