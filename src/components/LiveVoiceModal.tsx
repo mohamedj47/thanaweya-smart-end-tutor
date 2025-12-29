@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Mic, MicOff, PhoneOff, Loader2, Activity } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { GradeLevel, Subject } from '../types';
@@ -20,7 +20,6 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const sessionRef = useRef<any>(null);
   const nextStartTimeRef = useRef<number>(0);
   const mountedRef = useRef(true);
 
@@ -59,10 +58,8 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
     try {
       setStatus('connecting');
       setErrorMessage('');
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) throw new Error("No API Key found");
-
-      const ai = new GoogleGenAI({ apiKey });
+      // Always initialize GoogleGenAI with process.env.API_KEY directly
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContextClass({ sampleRate: 24000 });
@@ -93,7 +90,8 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
         التعليمات: تكلم بأسلوب "دردشة" وجمل قصيرة.
       `;
 
-      const session = await ai.live.connect({
+      // CRITICAL: Use sessionPromise to prevent race conditions when sending real-time data
+      const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         config: {
           responseModalities: [Modality.AUDIO],
@@ -123,11 +121,14 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
 
               const base64Data = encodeAudio(inputData);
               
-              session.sendRealtimeInput({
-                media: {
-                  mimeType: 'audio/pcm;rate=16000',
-                  data: base64Data
-                }
+              // Fixed: Use sessionPromise.then to ensure session is resolved before sending input
+              sessionPromise.then((session) => {
+                session.sendRealtimeInput({
+                  media: {
+                    mimeType: 'audio/pcm;rate=16000',
+                    data: base64Data
+                  }
+                });
               });
             };
 
@@ -140,7 +141,8 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
           onmessage: (msg: LiveServerMessage) => {
              if (!mountedRef.current) return;
              
-             const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+             const audioPart = msg.serverContent?.modelTurn?.parts?.[0];
+             const audioData = audioPart?.inlineData?.data;
              if (audioData && ctx) {
                 const float32Data = decodeAudioData(audioData);
                 const buffer = ctx.createBuffer(1, float32Data.length, 24000);
@@ -172,8 +174,6 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose,
           }
         }
       });
-      
-      sessionRef.current = session;
 
     } catch (e) {
       console.error(e);
