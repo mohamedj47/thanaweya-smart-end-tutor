@@ -7,14 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor': ['react', 'react-dom', 'recharts', 'lucide-react']
-        }
-      }
-    }
+    emptyOutDir: true
   },
   server: {
     host: true,
